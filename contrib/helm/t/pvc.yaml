@@ -1,0 +1,22 @@
+{{- $fullname := include "etcd.fullname" . }}
+{{- $labels := include "etcd.labels" . }}
+{{- $selectorLabels := include "etcd.selectorLabels" . }}
+{{- $serviceAccountName := include "etcd.serviceAccountName" . }}
+{{- range $.Values.etcdinstances }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ $fullname }}-{{ . }}
+  labels:
+    {{- $labels | nindent 4 }}
+    etcd/instance: {{ . | quote }}
+spec:
+  accessModes:
+    - ReadWriteOnce 
+  resources:
+    requests:
+      storage: 12Gi
+  storageClassName: {{ $.Values.storage.storageClass }}
+
+{{- end }}

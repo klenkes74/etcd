@@ -1,0 +1,56 @@
+{{- $fullname := include "etcd.fullname" . -}}
+{{- $labels := include "etcd.labels" . -}}
+{{- $selectorLabels := include "etcd.selectorLabels" . -}}
+{{- range $i, $e := tuple 0 1 2 -}}
+{{- with $ -}}
+{{- $instance := printf "%s-%d" $fullname $e -}}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ $instance }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+    etcd/instance: {{ $instance }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: {{ $instance }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: etcd
+      targetPort: etcd
+      protocol: TCP
+      port: 2379
+    - name: cluster
+      targetPort: cluster
+      protocol: TCP
+      port: 2380
+  sessionAffinity: None
+  selector:
+    {{- include "etcd.selectorLabels" . | nindent 4 }}
+    etcd/instance: {{ $instance }}
+{{ end }}
+{{- end -}}
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ $fullname }}
+  labels:
+    {{- include "etcd.labels" . | nindent 4 }}
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: {{ $fullname }}
+spec:
+  type: ClusterIP
+  ports:
+    - name: etcd
+      targetPort: etcd
+      protocol: TCP
+      port: 2379
+    - name: cluster
+      targetPort: cluster
+      protocol: TCP
+      port: 2380
+  sessionAffinity: None
+  selector:
+    {{- include "etcd.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,31 @@
+{{- $fullname := include "etcd.fullname" . -}}
+---
+kind: MachineConfig
+apiVersion: machineconfiguration.openshift.io/v1
+metadata:
+  labels:
+    machineconfiguration.openshift.io/role: master
+  name: 98-{{ $fullname }}-datadir
+spec:
+  config:
+    ignition:
+      version: 3.2.0
+    systemd:
+      units:
+        - contents: |-
+            [Unit]
+            Description=Make Patch for storageos etcd data
+            DefaultDependencies=no
+            BindsTo=dev-nvme1n1.device
+            After=dev-nvme1n1.device var.mount
+            
+            [Service]
+            Type=oneshot
+            RemainAfterExit=yes
+            ExecStart=-/bin/bash -c "/bin/mkdir -p {{ .Values.storage.path }}"
+            
+            [Install]
+            WantedBy=var-lib-containers.mount
+          enabled: true
+          name: storageos-etcd-data.service
+

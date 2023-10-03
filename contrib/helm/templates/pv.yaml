@@ -1,0 +1,37 @@
+{{- $fullname := include "etcd.fullname" . -}}
+{{- $labels := include "etcd.labels" . -}}
+{{- $selectorLabels := include "etcd.selectorLabels" . -}}
+{{- $serviceAccountName := include "etcd.serviceAccountName" . -}}
+{{- range $i, $e := tuple 0 1 2 -}}
+{{- with $ -}}
+{{- $instance := printf "%s-%d" $fullname $e -}}
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: {{ $instance }}
+  labels:
+    {{- $labels | nindent 4 }}
+    etcd/instance: {{ $instance }}
+spec:
+  storageClassName: {{ .Values.storage.storageClass }}
+  capacity:
+    storage: 12Gi
+  accessModes:
+    - ReadWriteOnce 
+  persistentVolumeReclaimPolicy: Retain
+  local:
+    path: {{ .Values.storage.path }} 
+  claimRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ $instance }}
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: {{ $fullname }}/node
+          operator: In
+          values:
+          - {{ $instance }}
+{{ end }}
+{{- end -}}
